@@ -16,9 +16,9 @@ public func mkdtemp<T>(prefix: String! = nil, body: (String) throws -> T) rethro
     let randomNum = rand()
     #endif
     let path = prefix! + "\(String(randomNum)).XXXXXX"
-    
+
     return try path.withCString { template in
-        let mutable = UnsafeMutablePointer<Int8>(template)
+        let mutable = UnsafeMutablePointer<Int8>(mutating: template)
         let dir = mkdtemp(mutable)
         if dir == nil { throw AppError.mkdtempFailed }
         defer { rmdir(dir!) }
@@ -36,9 +36,9 @@ public func swiftpmManifestTurnToJSON(at path: String) throws -> String {
         path
     )
     guard result.code == 0 else {
-        throw AppError.packageSwiftParsingFailed(result.stderr)
+        throw AppError.packageSwiftParsingFailed(result.stderrStringUTF8)
     }
-    return result.stdout
+    return result.stdoutStringUTF8
 }
 
 public func stringContentsOfFile(at path: String) throws -> String {

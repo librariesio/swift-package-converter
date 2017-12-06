@@ -11,9 +11,9 @@ enum AppError: Error {
 }
 
 // start the server
-let app = Droplet()
-app.middleware.append(LoggingMiddleware(app: app))
-app.middleware.append(TimerMiddleware())
+let app = Droplet(
+    staticServerMiddleware: [TimerMiddleware()]
+)
 
 // routes
 app.get("/") { _ in
@@ -33,30 +33,30 @@ app.get("/swift-version") { _ in
 }
 
 app.post("/to-json") { request in
-    
+
     guard let bytes = request.body.bytes, !bytes.isEmpty else {
         return try Response(status: .badRequest, json: JSON(["error": "No Package.swift data supplied"]))
     }
-    
+
     //create a temp file
     let result = try mkdtemp { (folderPath) -> String in
-        
+
         let path = "\(folderPath)/Package.swift"
-        
+
         //write data to temp file
         let string = try bytes.toString()
         try string.write(toFile: path, atomically: true, encoding: .utf8)
-        
+
         //ask swiftpm to parse it
         let result = try swiftpmManifestTurnToJSON(at: path)
-        
+
         //clean up
         unlink(path)
-        
+
         return result
     }
-    
+
     return Response(headers: ["Content-Type":"application/json"], body: result)
 }
 
-app.serve()
+app.run()
