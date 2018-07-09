@@ -14,10 +14,11 @@ RUN tar -xzf /tmp/swiftenv.tar.gz -C /usr/local/ --strip 1
 # Add swiftenv shims to PATH
 ENV PATH /usr/local/shims:$PATH
 RUN swiftenv install --no-build DEVELOPMENT-SNAPSHOT-2016-09-06-a
-
+COPY . /package
 WORKDIR /package
-VOLUME /package
+RUN swift build
+
 EXPOSE 8080
 
 # mount in local sources via:  -v $(PWD):/package
-CMD swift build && .build/debug/App
+CMD .build/debug/App
